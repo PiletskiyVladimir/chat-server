@@ -1,0 +1,44 @@
+{
+  "name": "chat-server",
+  "version": "0.0.0",
+  "description": "Simple chat server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PiletskiyVladimir/chat-server.git"
+  },
+  "keywords": [
+    "chat",
+    "server",
+    "socket.io",
+    "socket-io",
+    "nodejs",
+    "node-js",
+    "js",
+    "javascript"
+  ],
+  "author": "Volodymyr V-Man Piletskiy",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PiletskiyVladimir/chat-server/issues"
+  },
+  "homepage": "https://github.com/PiletskiyVladimir/chat-server#readme",
+  "dependencies": {
+    "async": "^1.5.2",
+    "axios": "^0.21.1",
+    "busboy": "^0.3.1",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "express-jwt": "^6.0.0",
+    "fs-extra": "^10.0.0",
+    "jsonwebtoken": "^8.5.1",
+    "moment": "^2.29.1",
+    "mongoose": "^5.12.8",
+    "mongoose-moment": "^0.1.3",
+    "morgan": "^1.10.0",
+    "socket.io": "^4.0.2"
+  }
+}
