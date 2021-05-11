@@ -5,6 +5,8 @@
 
 .idea
 
+/Config/config.json
+
 # User-specific stuff:
 .idea/**/workspace.xml
 .idea/**/tasks.xml
