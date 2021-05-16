@@ -1,6 +1,7 @@
 {
   "usage": "TO USE REPLACE DATA WITH YOUR VALUES AND DELETE THIS LINE",
   "port": 1111,
+  "jwt-token": "TestTestTestTest",
   "secret-key": "AAAAAAAAAAAAAA",
   "secret-key-resolved": "AAAAAAAAAAAAAAAAA",
   "db": {
@@ -11,6 +12,7 @@
     "port": 27017
   },
   "email": {
+    "sender": "sender",
     "service": "gmail",
     "auth": {
       "user": "1111",

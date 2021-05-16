@@ -8,6 +8,9 @@ const Message = new Schema({
     text: String,
     room: Number,
     time: Date
+}, {
+    timestamps: true,
+    collection: 'Message'
 });
 
 module.exports = Message;

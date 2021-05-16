@@ -1,14 +1,22 @@
-const mongoose = require('mongoose'),
+const
+    mongoose = require('mongoose'),
     config = require('./config.json');
 
 require('mongoose-moment')(mongoose);
 
-mongoose.model('Room',      require('../Models/room'));
-mongoose.model('User',      require('../Models/user'));
-mongoose.model('ChatUser',  require('../Models/chatUser'));
-mongoose.model('Message',   require('../Models/message'));
+mongoose.model('Room', require('../Models/room'));
+mongoose.model('User', require('../Models/user'));
+mongoose.model('ChatUser', require('../Models/chatUser'));
+mongoose.model('Message', require('../Models/message'));
 
-mongoose.connect(`mongodb://${config.db.user}:${config.db.password}@${config.db.host}:${config.db.port}/${config.db.name}`, {useNewUrlParser: true, useUnifiedTopology: true})
+mongoose.Promise = global.Promise;
+
+mongoose.connect(`mongodb://${config.db.user}:${config.db.password}@${config.db.host}:${config.db.port}/${config.db.name}`, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    connectTimeoutMS: 30000,
+    promiseLibrary: global.Promise
+})
     .then(() => {
         console.log('connected successfully');
     }).catch(error => {

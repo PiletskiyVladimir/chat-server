@@ -14,6 +14,9 @@ const Room = new Schema({
     users: [{type: String}],
     createdAt: {type: 'Moment'},
     updatedAt: {type: 'Moment'}
+}, {
+    timestamps: true,
+    collection: 'Room'
 })
 
 module.exports = Room;
