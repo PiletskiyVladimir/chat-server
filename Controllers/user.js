@@ -26,7 +26,7 @@ async function createUser (req, res) {
         new ValidationField('password',     password,   'password', false, 'password'),
         new ValidationField('name',         name,       'string',   false, 'name'),
         new ValidationField('lastName',     lastName,   'string',   false, 'lastName'),
-        new ValidationField('middleName',   middleName, 'string',   true,   'middleName')
+        new ValidationField('middleName',   middleName, 'string',   true,  'middleName')
     ];
 
     let {errors, obj} = FieldsValidator(params);
@@ -35,6 +35,18 @@ async function createUser (req, res) {
         return res.status(400).send({
             errors: errors
         })
+    }
+
+    let [findUser, findUserError] = await handle(User.findOne({email: email}).lean().exec());
+
+    if (findUserError) {
+        return res.status(403).send({
+            error: findUserError
+        })
+    }
+
+    if (findUser) {
+        return res.status(409).end();
     }
 
     obj.code = generateCode();
