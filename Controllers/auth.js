@@ -1,12 +1,69 @@
 const
+    mongoose = require('../Config/database'),
+    sendMail = require('../Config/nodemailer'),
     config = require('../Config/config.json'),
-    jwt = require('jsonwebtoken');
 
-async function auth (req, res) {
-    // TODO
-    return res.status(200).send({
-        token: jwt.sign({id: 1, key: 1}, config["jwt-token"])
-    })
+    User = mongoose.model('User'),
+
+    moment = require('moment'),
+
+    ValidationField = require('../Models/validationField'),
+
+    FieldsValidator = require('../Utils/fieldsValidator'),
+    {userObj} = require('../Utils/modelObjects'),
+    {handle, generateCode, generateToken} = require('../Utils/utils');
+
+async function auth(req, res) {
+    /* fields
+        * email
+        * code
+    */
+
+    let {email, code} = req.body;
+
+    let params = [
+        new ValidationField('email', email, 'email', false, 'email'),
+        new ValidationField('code', code, 'number', false, 'code')
+    ];
+
+    let {errors, obj} = FieldsValidator(params);
+
+    if (errors.length > 0) {
+        return res.status(400).send(errors);
+    }
+
+    let [findUser, findUserError] = await handle(User.findOne({email: obj.email}).lean().exec());
+
+    if (findUserError) {
+        return res.status(403).send({
+            error: findUserError
+        })
+    }
+
+    if (!findUser) {
+        return res.status(404).end();
+    }
+
+    if (+findUser.code !== obj.code) {
+        return res.status(401).end();
+    }
+
+    if (moment(findUser.codeExpiresIn).valueOf() < moment().valueOf()) {
+        return res.status(401).end();
+    }
+
+    let [userAuthUpdate, userAuthUpdateError] = await handle(User.findByIdAndUpdate(findUser._id, {
+        code: null,
+        codeExpiresIn: null
+    }));
+
+    if (userAuthUpdateError) {
+        return res.status(403).send({
+            error: userAuthUpdateError
+        })
+    }
+
+    res.status(200).json({key: findUser.email, token: generateToken(findUser._id, findUser.email)});
 }
 
 module.exports = {

@@ -1,7 +1,15 @@
+const
+    jwt = require('jsonwebtoken'),
+    config = require('../Config/config.json');
+
 const handle = (promise) => {
     return promise
         .then(data => ([data, undefined]))
         .catch(error => Promise.resolve([undefined, error]));
+}
+
+function generateToken(userId, key) {
+    return jwt.sign({id: userId, email: key}, config["jwt-token"]);
 }
 
 function generateCode() {
@@ -47,5 +55,6 @@ function passwordValidation (string) {
 module.exports = {
     handle,
     generateCode,
+    generateToken,
     passwordValidation
 }

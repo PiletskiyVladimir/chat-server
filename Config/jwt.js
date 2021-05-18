@@ -3,7 +3,7 @@ let expressJwt = require('express-jwt'),
 
 module.exports = expressJwt({
     secret: config["jwt-token"],
-    algorithms: ['RS256'],
+    algorithms: ['HS256'],
     getToken: function (req) {
         if (req.header("token")) {
             return req.header("token");

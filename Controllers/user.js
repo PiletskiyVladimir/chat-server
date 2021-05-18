@@ -14,11 +14,20 @@ const
     {handle, generateCode} = require('../Utils/utils');
 
 async function getUsersList (req, res) {
+    console.log(req.user)
     console.log(req.query);
     res.send(req.query);
 }
 
 async function createUser (req, res) {
+    /* fields
+        * email
+        * password
+        * name
+        * lastName
+        * middleName
+    */
+
     let {email, password, name, lastName, middleName} = req.body;
 
     let params = [
@@ -50,7 +59,7 @@ async function createUser (req, res) {
     }
 
     obj.code = generateCode();
-    obj.codeExpiresIn = moment(moment().valueOf() + 600000).format('YYYY-MM-DD hh:mm:ss');
+    obj.codeExpiresIn = moment(moment().valueOf() + 600000).format('YYYY-MM-DD HH:mm:ss');
 
     let [createdUser, createdUserError] = await handle(User.create(obj));
 

@@ -5,10 +5,10 @@ const
 const User = new Schema({
     email: {type: String, required: true},
     code: {type: String},
-    codeExpiresIn: {type: 'Moment'},
+    codeExpiresIn: {type: Date},
     role: {type: String, enum: ['admin', 'user', 'operator']},
     status: {type: String, enum: ['blocked', 'normal', 'frozen']},
-    frozenUntil: {type: 'Moment', default: null},
+    frozenUntil: {type: Date, default: null},
     name: {type: String, required: true},
     lastName: {type: String, required: true},
     middleName: String,

@@ -4,6 +4,7 @@ const
     express = require('express'),
     http = require('http'),
     config = require('./Config/config.json'),
+    logger = require('morgan'),
     cors = require('cors'),
     bodyParser = require('body-parser'),
     port = config.port,
@@ -13,6 +14,8 @@ const
 app.use(bodyParser.urlencoded({extended: false, limit: '100mb'}));
 app.use(bodyParser.json({limit: '100mb'}));
 app.use(bodyParser.text());
+
+app.use(logger('dev'));
 
 app.use(cors());
 
