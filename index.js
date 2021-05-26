@@ -1,5 +1,8 @@
 const
     {queryParser} = require('express-query-parser'),
+    fileUpload  = require('express-fileupload'),
+    crypto = require('crypto'),
+    path = require('path'),
     socketIo = require('socket.io'),
     express = require('express'),
     http = require('http'),
@@ -10,6 +13,13 @@ const
     port = config.port,
     app = express(),
     server = http.createServer(app);
+
+app.use(fileUpload({
+    // debug: true,
+    parseNested: true,
+    abortOnLimit: true,
+    limits: { fileSize: 20 * 1024 * 1024 }
+}));
 
 app.use(bodyParser.urlencoded({extended: false, limit: '100mb'}));
 app.use(bodyParser.json({limit: '100mb'}));
@@ -29,6 +39,8 @@ app.use(
         parseBoolean: true
     })
 )
+
+app.use(express.static(path.join(__dirname, 'uploads')));
 
 app.use('/', require('./Routes'));
 
@@ -52,5 +64,12 @@ const io = socketIo(server, {
 io.on('connection', socket => {
     // TODO
 })
+
+// const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
+//     // The standard secure default length for RSA keys is 2048 bits
+//     modulusLength: 2048,
+// });
+//
+// console.log(publicKey, privateKey);
 
 app.locals.io = io;

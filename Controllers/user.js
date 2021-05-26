@@ -6,36 +6,59 @@ const
     User = mongoose.model('User'),
 
     moment = require('moment'),
+    fsx = require('fs-extra'),
+    path = require('path'),
+    md5 = require('md5'),
 
     ValidationField = require('../Models/validationField'),
 
     FieldsValidator = require('../Utils/fieldsValidator'),
     {userObj} = require('../Utils/modelObjects'),
-    {handle, generateCode} = require('../Utils/utils');
+    {handle, generateCode} = require('../Utils/utils'),
+    {GetRights, IsAdmin, IsCurrentUser} = require('../Utils/rightsDescription');
 
-async function getUsersList (req, res) {
-    console.log(req.user)
-    console.log(req.query);
-    res.send(req.query);
+async function getUsersList(req, res) {
+    // TODO search params
+
+    let searchObj = {};
+
+    let [users, usersError] = await handle(User.find(searchObj).lean().exec());
+
+    if (usersError) {
+        return res.status(403).send({
+            error: usersError
+        })
+    }
+
+    let [countUsers, countUsersError] = await handle(User.countDocuments(searchObj).lean().exec());
+
+    if (countUsersError) {
+        return res.status(403).send({
+            error: countUsersError
+        })
+    }
+
+    return res.status(200).send({
+        data: users.map(el => userObj(el)),
+        count: countUsers
+    });
 }
 
-async function createUser (req, res) {
+async function createUser(req, res) {
     /* fields
         * email
-        * password
         * name
         * lastName
         * middleName
     */
 
-    let {email, password, name, lastName, middleName} = req.body;
+    let {email, name, lastName, nickname} = req.body;
 
     let params = [
-        new ValidationField('email',        email,      'email',    false, 'email'),
-        new ValidationField('password',     password,   'password', false, 'password'),
-        new ValidationField('name',         name,       'string',   false, 'name'),
-        new ValidationField('lastName',     lastName,   'string',   false, 'lastName'),
-        new ValidationField('middleName',   middleName, 'string',   true,  'middleName')
+        new ValidationField('email', email, 'email', false, 'email'),
+        new ValidationField('name', name, 'string', false, 'name'),
+        new ValidationField('lastName', lastName, 'string', false, 'lastName'),
+        new ValidationField('nickname', nickname, 'nickname', false, 'nickname')
     ];
 
     let {errors, obj} = FieldsValidator(params);
@@ -44,6 +67,20 @@ async function createUser (req, res) {
         return res.status(400).send({
             errors: errors
         })
+    }
+
+    let [findNickUser, findNickUserError] = await handle(User.findOne({nickname: nickname}).lean().exec());
+
+    if (findNickUserError) {
+        return res.status(403).send({
+            error: findNickUserError
+        })
+    }
+
+    if (findNickUser) {
+        return res.status(409).send({
+            field: 'nickname'
+        });
     }
 
     let [findUser, findUserError] = await handle(User.findOne({email: email}).lean().exec());
@@ -55,7 +92,9 @@ async function createUser (req, res) {
     }
 
     if (findUser) {
-        return res.status(409).end();
+        return res.status(409).send({
+            field: 'nickname'
+        });
     }
 
     obj.code = generateCode();
@@ -80,24 +119,341 @@ async function createUser (req, res) {
     return res.status(200).send(userObj(createdUser));
 }
 
-async function getUserInfo (req, res) {
+async function getUserInfo(req, res) {
+    let params = [
+        new ValidationField('id', req.params.id, 'string', false)
+    ]
 
+    let {errors, obj} = FieldsValidator(params);
+
+    if (errors.length > 0) {
+        return res.status(400).send({
+            errors: errors
+        })
+    }
+
+    let [user, userError] = await handle(User.findById(req.params.id));
+
+    if (userError) {
+        return res.status(403).send({
+            error: userError
+        })
+    }
+
+    if (!user) {
+        return res.status(404).end();
+    }
+
+    return res.status(200).send(userObj(user));
 }
 
-async function updateUser (req, res) {
+async function updateUser(req, res) {
+    /* fields
+        id
+        name
+        lastName
+        email
+        profileDescription
+        nickname
+    */
 
+    let {name, lastName, profileDescription} = req.body;
+
+    let params = [
+        new ValidationField('id', req.params.id, 'string', false),
+        new ValidationField('name', name, 'string', true, 'name'),
+        new ValidationField('lastName', lastName, 'string', true, 'lastName'),
+        new ValidationField('profileDescription', profileDescription, 'string', true, 'profileDescription')
+    ];
+
+    let {errors, obj} = FieldsValidator(params);
+
+    if (errors.length > 0) {
+        return res.status(400).send({
+            errors: errors
+        })
+    }
+
+    let [findUser, findUserError] = await handle(User.findById(req.params.id).lean().exec());
+
+    if (findUserError) {
+        return res.status(403).send({
+            error: findUserError
+        })
+    }
+
+    if (!findUser) {
+        return res.status(404).end();
+    }
+
+    if (!GetRights(req.user, findUser)) return res.status(403).end();
+
+    let [updatedUser, updatedUserError] = await handle(User.updateOne({_id: req.params.id}, obj).lean().exec());
+
+    if (updatedUserError) {
+        return res.status(403).send({
+            error: updatedUserError
+        })
+    }
+
+    return res.status(200).end();
 }
 
-async function deleteUser (req, res) {
+async function deleteUser(req, res) {
+    let {errors, obj} = FieldsValidator([new ValidationField('id', req.params.id, 'string', false)]);
 
+    if (errors.length > 0) {
+        return res.status(400).send({
+            errors: errors
+        })
+    }
+
+    let [findUser, findUserError] = await handle(User.findById(req.params.id).lean().exec());
+
+    if (findUserError) {
+        return res.status(403).send({
+            error: findUserError
+        })
+    }
+
+    if (!findUser) {
+        return res.status(404).end();
+    }
+
+    if (!GetRights(req.user, findUser)) return res.status(403).end();
+
+    // TODO delete user traces
+
+    let [deleteUser, deleteUserError] = await handle(User.deleteOne({_id: req.params.id}));
+
+    if (deleteUserError) {
+        return res.status(403).send({
+            error: deleteUserError
+        })
+    }
+
+    return res.status(200).end();
 }
 
-async function blockUser (req, res) {
+async function blockUnblockUser(req, res) {
+    let {errors, obj} = FieldsValidator([
+        new ValidationField('id', req.params.id, 'string', false),
+        new ValidationField('status', req.query.status, 'string', false)
+    ]);
 
+    if (errors.length > 0) {
+        return res.status(400).send({
+            errors: errors
+        })
+    }
+
+    if (!IsAdmin(req.user)) return res.status(403).end();
+
+    let [findUser, findUserError] = await handle(User.findOne({_id: req.params.id}).lean().exec());
+
+    if (findUserError) {
+        return res.status(403).send({
+            error: findUserError
+        })
+    }
+
+    if (!findUser) return res.status(404).end();
+
+    let [updateUser, updateUserError] = await handle(User.findByIdAndUpdate(req.params.id, {status: req.query.status}));
+
+    if (updateUserError) {
+        return res.status(403).send({
+            error: updateUserError
+        });
+    }
+
+    return res.status(200).end();
 }
 
-async function unblockUser (req, res) {
+async function loadImage(req, res) {
+    let params = [
+        new ValidationField('id', req.params.id, 'string', false),
+        new ValidationField('file', req.files ? req.files.avatar : null, 'file', false)
+    ];
 
+    let {errors, obj} = FieldsValidator(params);
+
+    if (errors.length > 0) {
+        return res.status(400).send({errors: errors})
+    }
+
+    let [user, userError] = await handle(User.findById(req.params.id).lean().exec());
+
+    if (userError) {
+        return res.status(403).send({
+            error: userError
+        })
+    }
+
+    if (!user) {
+        return res.status(404).end();
+    }
+
+    let file = req.files.avatar,
+        extension = path.extname(file.name),
+        fileName = md5('verylongfilename' + Date.now()),
+        avatar = 'uploads/avatar/' + fileName + extension
+
+    await file.mv('./' + avatar);
+
+    let [updatedUser, updatedUserError] = await handle(User.findByIdAndUpdate(req.params.id, {
+        avatar: avatar
+    }));
+
+    if (updatedUserError) {
+        return res.status(403).send({
+            error: updatedUserError
+        })
+    }
+
+    res.status(200).end();
+}
+
+async function deleteImage(req, res) {
+    let {errors, obj} = FieldsValidator([
+        new ValidationField('id', req.params.id, 'string', false)
+    ]);
+
+    if (errors.length > 0) {
+        return res.status(400).send({
+            errors: errors
+        })
+    }
+
+    let [findUser, findUserError] = await handle(User.findById(req.params.id).lean().exec());
+
+    if (findUserError) {
+        return res.status(403).send({
+            error: findUserError
+        })
+    }
+
+    if (!findUser) return res.status(404).end();
+
+    if (!GetRights(req.user, findUser)) return res.status(403).end();
+
+    let [deleteFile, deleteFileError] = await handle(fsx.remove('./' + findUser.avatar));
+
+    if (deleteFileError) {
+        return res.status(403).send({
+            error: deleteFileError
+        })
+    }
+
+    let [updateUser, updateUserError] = await handle(User.updateOne({_id: req.params.id}, {
+        avatar: null
+    }))
+
+    if (updateUserError) {
+        return res.status(403).send({
+            error: updateUserError
+        })
+    }
+
+    return res.status(200).end();
+}
+
+async function changeEmail(req, res) {
+    let params = [
+        new ValidationField('id', req.params.id, 'number', false),
+        new ValidationField('email', req.body.email, 'email', false)
+    ]
+
+    let {errors, obj} = FieldsValidator(params);
+
+    if (errors.length > 0) {
+        return res.status(400).send({
+            errors: errors
+        })
+    }
+
+    let [findUser, findUserError] = await handle(User.findById(req.params.id).lean().exec());
+
+    if (findUserError) {
+        return res.status(403).send({
+            error: findUserError
+        })
+    }
+
+    if (!findUser) return res.status(404).end();
+
+    if (!GetRights(req.user, findUser)) return res.status(403).end();
+
+    let [findUserWithSameEmail, findUserWithSameEmailError] = await handle(User.findOne({email: req.body.email}).lean().exec());
+
+    if (findUserWithSameEmailError) {
+        return res.status(403).send({
+            error: findUserWithSameEmailError
+        })
+    }
+
+    if (findUserWithSameEmail) return res.status(409).end();
+
+    let [updateEmail, updateEmailError] = await handle(User.updateOne({_id: req.params.id}, {
+        email: req.body.email
+    }));
+
+    if (updateEmailError) {
+        return res.status(403).send({
+            error: updateEmailError
+        })
+    }
+
+    return res.status(200).end();
+}
+
+async function changeNickname(req, res) {
+    let params = [
+        new ValidationField('id', req.params.id, 'number', false),
+        new ValidationField('nickname', req.body.nickname, 'string', false)
+    ]
+
+    let {errors, obj} = FieldsValidator(params);
+
+    if (errors.length > 0) {
+        return res.status(400).send({
+            errors: errors
+        })
+    }
+
+    let [findUser, findUserError] = await handle(User.findById(req.params.id).lean().exec());
+
+    if (findUserError) {
+        return res.status(403).send({
+            error: findUserError
+        })
+    }
+
+    if (!findUser) return res.status(404).end();
+
+    if (!GetRights(req.user, findUser)) return res.status(403).end();
+
+    let [findUserWithSameNickname, findUserWithSameNicknameError] = await handle(User.findOne({nickname: req.body.nickname}).lean().exec());
+
+    if (findUserWithSameNicknameError) {
+        return res.status(403).send({
+            error: findUserWithSameNicknameError
+        })
+    }
+
+    if (findUserWithSameNickname) return res.status(409).end();
+
+    let [updateNickname, updateNicknameError] = await handle(User.updateOne({_id: req.params.id}, {
+        nickname: req.body.nickname
+    }));
+
+    if (updateNicknameError) {
+        return res.status(403).send({
+            error: updateNicknameError
+        })
+    }
+
+    return res.status(200).end();
 }
 
 module.exports = {
@@ -106,6 +462,9 @@ module.exports = {
     getUserInfo,
     updateUser,
     deleteUser,
-    blockUser,
-    unblockUser
+    blockUnblockUser,
+    loadImage,
+    deleteImage,
+    changeNickname,
+    changeEmail
 }

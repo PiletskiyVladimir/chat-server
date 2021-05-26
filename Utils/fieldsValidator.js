@@ -23,6 +23,13 @@ function fieldsValidator (params) {
 
         if ((param.value === undefined || param.value === null) && param.optional === true && param.dbName != null) {obj[param.dbName] = null;continue;}
 
+        if (param.allowedValues) {
+            if (param.allowedValues.indexOf(param.value) === -1) {
+                errors.push(new Error(CODE_TYPE_ERROR, param.name, `FIELD ${param.name} IS INVALID`));
+                continue;
+            }
+        }
+
         switch (param.type) {
             case 'arrayNumber': {
                 for (let el of param.value) {
@@ -78,6 +85,10 @@ function fieldsValidator (params) {
             }
             case 'boolean': {
                 if (typeof param.value !== 'boolean') {isError = true;}
+                break;
+            }
+            case 'file': {
+                if (!param.value) isError = true;
                 break;
             }
             case 'searchString': {

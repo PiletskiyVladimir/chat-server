@@ -8,8 +8,8 @@ const handle = (promise) => {
         .catch(error => Promise.resolve([undefined, error]));
 }
 
-function generateToken(userId, key) {
-    return jwt.sign({id: userId, email: key}, config["jwt-token"]);
+function generateToken(userId, email, userRole) {
+    return jwt.sign({id: userId, email: email, userRole: userRole}, config["jwt-token"]);
 }
 
 function generateCode() {

@@ -1,7 +1,8 @@
 const
     router = require('express').Router(),
-    {auth} = require('../Controllers/auth');
+    {auth, sendCode} = require('../Controllers/auth');
 
 router.post('', auth);
+router.post('/send-code', sendCode);
 
 module.exports = router;
