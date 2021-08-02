@@ -1,4 +1,6 @@
 const
+    mongoose = require('./Config/database'),
+    Logs = mongoose.model('Logs'),
     {queryParser} = require('express-query-parser'),
     fileUpload  = require('express-fileupload'),
     crypto = require('crypto'),
@@ -14,12 +16,16 @@ const
     app = express(),
     server = http.createServer(app);
 
-app.use(fileUpload({
-    // debug: true,
-    parseNested: true,
-    abortOnLimit: true,
-    limits: { fileSize: 20 * 1024 * 1024 }
-}));
+const io = socketIo(server, {
+    cors: {
+        origin: '*',
+    },
+    path: "/socket.io"
+});
+
+require('./Socket/socket')(io);
+
+app.io = io;
 
 app.use(bodyParser.urlencoded({extended: false, limit: '100mb'}));
 app.use(bodyParser.json({limit: '100mb'}));
@@ -33,6 +39,8 @@ app.get('/', (req, res) => {
     res.send('App is working');
 })
 
+app.use('/', require('./Routes/index'));
+
 app.use(
     queryParser({
         parseNull: true,
@@ -40,27 +48,27 @@ app.use(
     })
 )
 
-app.use(express.static(path.join(__dirname, 'uploads')));
-
-app.use('/', require('./Routes'));
-
 app.all('*', (req, res) => {
     res.status(404).send({
         err: "Path or method are wrong"
     });
 });
 
+app.use(async function (err, req, res, next) {
+    console.log("==========================ERROR IN ROUTE==========================");
+    console.error(err.stack);
+    let status = err.status || 500;
+    await Logs.create({message: err.message, status: err.status, body: err.body});
+    res.status(status);
+    res.json({
+        status: status,
+        message: err.message,
+        code: err.code,
+        errorBody: err.errorBody
+    });
+    console.log("=================================================================");
+});
+
 server.listen(port, () => {
     console.log(`Server has started on port: ${port}`);
 });
-
-const io = socketIo(server, {
-    cors: {
-        origin: '*',
-    },
-    path: "/socket.io"
-});
-
-require('./Socket/socket')(io);
-
-app.locals.io = io;

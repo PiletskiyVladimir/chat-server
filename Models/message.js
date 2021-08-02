@@ -6,7 +6,7 @@ const Message = new Schema({
     sender: {type: mongoose.Schema.ObjectId, ref: 'User', required: true},
     addons: [Buffer],
     text: String,
-    room: Number,
+    room: String,
     time: Date
 }, {
     timestamps: true,

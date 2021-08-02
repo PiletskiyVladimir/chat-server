@@ -2,7 +2,7 @@ const
     moment = require('moment'),
     emailValidator = require('email-validator'),
     {passwordValidation} = require('../Utils/utils'),
-    Error = require('../Models/Error');
+    Error = require('./Error');
 
 // ERROR CONSTANTS
 
@@ -74,7 +74,8 @@ function fieldsValidator (params) {
                 break;
             }
             case 'number': {
-                if (typeof param.value !== 'number') {
+                console.log(isNaN(param.value))
+                if (isNaN(param.value)) {
                     isError = true;
                 }
                 break;

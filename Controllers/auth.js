@@ -98,7 +98,7 @@ async function auth(req, res) {
         return res.status(404).end();
     }
 
-    if (+findUser.code !== obj.code) {
+    if (+findUser.code !== +obj.code) {
         return res.status(401).end();
     }
 

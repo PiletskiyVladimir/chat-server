@@ -3,17 +3,14 @@ const mongoose = require('mongoose'),
 
 const Room = new Schema({
     key: {type: String, required: true},
-    hasNewMessage: {type: Boolean},
     lastMessage: {
-        id: {type: String},
-        sender: {type: String},
-        message: {type: String},
-        type: {type: String},
-        date: {type: 'Moment'}
-    },
-    users: [{type: String}],
-    createdAt: {type: 'Moment'},
-    updatedAt: {type: 'Moment'}
+        _id: false,
+        sender: {type: mongoose.Schema.ObjectId, ref: 'User', required: true},
+        addons: [Buffer],
+        text: String,
+        room: String,
+        time: Date
+    }
 }, {
     timestamps: true,
     collection: 'Room'

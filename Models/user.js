@@ -3,19 +3,20 @@ const
     Schema = mongoose.Schema;
 
 const User = new Schema({
-    onlineStatus: {type: String, enum: ['online', 'offline']},
-    lastActive: {type: Date, default: null},
+    name: {type: String, required: true},
+    lastName: {type: String, required: true},
     email: {type: String, required: true},
     code: {type: String},
     codeExpiresIn: {type: Date},
+    onlineStatus: {type: String, enum: ['online', 'offline']},
+    lastActive: {type: Date, default: null},
+    avatar: {type: String, default: null},
+    nickname: {type: String, required: true},
     role: {type: String, enum: ['admin', 'user', 'operator'], default: 'user'},
     status: {type: String, enum: ['blocked', 'normal', 'frozen']},
     frozenUntil: {type: Date, default: null},
-    name: {type: String, required: true},
-    lastName: {type: String, required: true},
-    avatar: {type: String, default: null},
     profileDescription: String,
-    nickname: {type: String, required: true}
+    hidden: {type: Boolean}
 }, {
     timestamps: true,
     collection: 'User'

@@ -21,7 +21,7 @@ async function sendMail(from, to, subject, text, html) {
             html: html
         }, (error, info) => {
             if (error) {
-                console.log("Email send error " + error);
+                console.log("Email send error \n" + error);
                 reject(error);
             } else {
                 console.log('Email sent: ' + info.response);

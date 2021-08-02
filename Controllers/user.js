@@ -14,11 +14,10 @@ const
 
     FieldsValidator = require('../Utils/fieldsValidator'),
     {userObj} = require('../Utils/modelObjects'),
-    {handle, generateCode} = require('../Utils/utils'),
-    {GetRights, IsAdmin, IsCurrentUser} = require('../Utils/rightsDescription');
+    {handle, generateCode} = require('../Utils/utils');
 
 async function getUsersList(req, res) {
-    // TODO search params
+    // TODO search params., limits, offset
 
     let searchObj = {};
 
@@ -49,7 +48,7 @@ async function createUser(req, res) {
         * email
         * name
         * lastName
-        * middleName
+        * nickname
     */
 
     let {email, name, lastName, nickname} = req.body;
@@ -93,7 +92,7 @@ async function createUser(req, res) {
 
     if (findUser) {
         return res.status(409).send({
-            field: 'nickname'
+            field: 'email'
         });
     }
 
