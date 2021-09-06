@@ -52,9 +52,48 @@ function passwordValidation (string) {
     return hasPasswordLowerCase(string) && hasPasswordUpperCase(string) && hasPasswordNumber(string);
 }
 
+function searchParams (req) {
+    let limit = 10,
+        offset = 0,
+        sortField = "_id",
+        sortType = 0;
+
+    if (req.query.sortType !== undefined) {
+        switch (req.query.sortType) {
+            case '1':
+            case 'asc':
+            case "ASC": {
+                sortType = 0;
+                break;
+            }
+            case '0':
+            case 'desc':
+            case "DESC": {
+                sortType = 1;
+                break;
+            }
+        }
+    }
+
+    if (req.query.sortField !== undefined) {
+        sortField = req.query.sortField;
+    }
+
+    if (req.query.limit !== undefined && !isNaN(req.query.limit)) {
+        limit = req.query.limit;
+    }
+
+    if (req.query.offset !== undefined && !isNaN(req.query.offset)) {
+        offset = req.query.offset;
+    }
+
+    return {limit, offset, sortField, sortType};
+}
+
 module.exports = {
     handle,
     generateCode,
     generateToken,
-    passwordValidation
+    passwordValidation,
+    searchParams
 }

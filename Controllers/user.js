@@ -14,14 +14,27 @@ const
 
     FieldsValidator = require('../Utils/fieldsValidator'),
     {userObj} = require('../Utils/modelObjects'),
-    {handle, generateCode} = require('../Utils/utils');
+    {handle, generateCode, searchParams} = require('../Utils/utils');
 
 async function getUsersList(req, res) {
     // TODO search params., limits, offset
 
-    let searchObj = {};
+    let {limit, offset, sortField, sortType} = searchParams(req);
 
-    let [users, usersError] = await handle(User.find(searchObj).lean().exec());
+    let params = [
+        new ValidationField('email', req.query.email, 'searchString', true, 'email'),
+        new ValidationField('name', req.query.name, 'searchString', true, 'name'),
+        new ValidationField('lastName', req.query.lastName, 'searchString', true, 'lastName'),
+        new ValidationField('nickname', req.query.nickname, 'searchString', true, 'nickname')
+    ];
+
+    let {errors, obj} = FieldsValidator(params);
+
+    console.log(obj);
+
+    if (errors.length > 0) return res.status(400).send(errors);
+
+    let [users, usersError] = await handle(User.find(obj).limit(limit).skip(offset).sort({[sortField]: sortType}).lean().exec());
 
     if (usersError) {
         return res.status(403).send({
@@ -29,7 +42,7 @@ async function getUsersList(req, res) {
         })
     }
 
-    let [countUsers, countUsersError] = await handle(User.countDocuments(searchObj).lean().exec());
+    let [countUsers, countUsersError] = await handle(User.countDocuments(obj).lean().exec());
 
     if (countUsersError) {
         return res.status(403).send({
