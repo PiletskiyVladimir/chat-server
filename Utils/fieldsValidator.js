@@ -113,7 +113,7 @@ function fieldsValidator (params) {
                         if (isNaN(el)) isError = true;
                     }
 
-
+                    obj[param.dbName] = {$in: splattedArray};
                 }
 
                 break;
