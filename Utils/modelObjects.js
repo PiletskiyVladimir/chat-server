@@ -1,5 +1,8 @@
 const
-    moment = require('moment');
+    moment = require('moment'),
+    mongoose = require("mongoose");
+const lo = require("moment/locale/lo");
+const da = require("moment/locale/da");
 
 function userObj (data) {
     // TODO return binary data from avatar
@@ -22,22 +25,26 @@ function userObj (data) {
 function roomObj (data) {
     return {
         id: data._id,
-        key: data.key,
-        hasNewMessage: data.hasNewMessage,
-        lastMessage: {
-            id: data.lastMessage.id,
-            sender: data.lastMessage.sender,
-            message: data.lastMessage.message,
-            type: data.lastMessage.type,
-            date: moment(data.lastMessage.date).format("YYYY-MM-DD hh:mm:ss")
-        },
+        lastMessage: messageObj(data.lastMessage),
         users: data.users,
         createdAt: moment(data.createdAt).format("YYYY-MM-DD hh:mm:ss"),
         updatedAt: moment(data.updatedAt).format("YYYY-MM-DD hh:mm:ss")
     }
 }
 
+function messageObj (message) {
+    return {
+        sender: message.sender,
+        files: message.files,
+        text: message.text,
+        room: message.room,
+        createdAt: moment(message.createdAt).format("YYYY-MM-DD hh:mm:ss"),
+        updatedAt: moment(message.updatedAt).format("YYYY-MM-DD hh:mm:ss")
+    };
+}
+
 module.exports = {
     userObj,
-    roomObj
+    roomObj,
+    messageObj
 }

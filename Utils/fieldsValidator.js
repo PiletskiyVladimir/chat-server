@@ -19,9 +19,7 @@ function fieldsValidator (params) {
             continue;
         }
 
-        if ((param.value === undefined || param.value === null) && param.optional === true && param.dbName == null) {continue;}
-
-        if ((param.value === undefined || param.value === null) && param.optional === true && param.dbName != null) {obj[param.dbName] = null;continue;}
+        if ((param.value === undefined || param.value === null) && param.optional === true) {continue;}
 
         if (param.allowedValues) {
             if (param.allowedValues.indexOf(param.value) === -1) {
@@ -93,9 +91,31 @@ function fieldsValidator (params) {
                 break;
             }
             case 'searchString': {
+                if (param.value !== null) {
+                    if (typeof param.value !== "string") isError = true;
+
+                    let splattedArray = param.value.split(',');
+
+                    if (splattedArray.length === 0) break;
+
+                    obj[param.dbName] = {$in: splattedArray.map(el => new RegExp(el))};
+                }
+
                 break;
             }
             case 'searchNumber': {
+                if (param.value !== null) {
+                    let splattedArray = param.value.split(',');
+
+                    if (splattedArray.length === 0) break;
+
+                    for (let el of splattedArray) {
+                        if (isNaN(el)) isError = true;
+                    }
+
+
+                }
+
                 break;
             }
             case 'searchDate': {
@@ -108,7 +128,7 @@ function fieldsValidator (params) {
 
         if (isError) {
             errors.push(new Error(CODE_TYPE_ERROR, param.name, `FIELD ${param.name} IS INVALID`))
-        } else if (param.value != null && param.value !== '') {
+        } else if (param.value != null && param.value !== '' && param.type !== 'searchString' && param.type !== 'searchNumber' && param.type !== 'searchDate' && param.type !== 'searchBool') {
             obj[param.dbName] = param.value;
         }
     }

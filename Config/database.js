@@ -6,7 +6,6 @@ require('mongoose-moment')(mongoose);
 
 mongoose.model('Room',      require('../Models/room'));
 mongoose.model('User',      require('../Models/user'));
-mongoose.model('ChatUser', require('../Models/chatUser'));
 mongoose.model('Message',   require('../Models/message'));
 mongoose.model('Logs',      require('../Models/logs'));
 
