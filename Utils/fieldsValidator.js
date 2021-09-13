@@ -119,9 +119,30 @@ function fieldsValidator (params) {
                 break;
             }
             case 'searchDate': {
+                if (param.value !== null) {
+                    let splattedArray = param.value.split(',');
+
+                    if (splattedArray.length === 0) break;
+
+                    obj[param.dbName] = {
+                        $gte: splattedArray[0],
+                        $lte: splattedArray[1]
+                    }
+                }
+
                 break;
             }
             case 'searchBool': {
+                if (param.value !== null) {
+                    let splattedArray = param.value.split(',');
+
+                    if (splattedArray.length === 0) break;
+
+                    obj[param.dbName] = splattedArray.map(el => {
+                        return {$eq: el}
+                    });
+                }
+
                 break;
             }
         }

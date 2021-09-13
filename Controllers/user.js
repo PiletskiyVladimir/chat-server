@@ -1,4 +1,6 @@
 const
+    UserRights = require('../Rights/MainRights'),
+
     mongoose = require('../Config/database'),
     sendMail = require('../Config/nodemailer'),
     config = require('../Config/config.json'),
@@ -30,9 +32,14 @@ async function getUsersList(req, res) {
 
     let {errors, obj} = FieldsValidator(params);
 
-    console.log(obj);
-
     if (errors.length > 0) return res.status(400).send(errors);
+
+    let userRights = new UserRights(req.user.id, null, null);
+    await userRights.initializeUser();
+
+    let ids = obj['_id'];
+
+    obj['_id'] = await userRights.whatCanRead(ids);
 
     let [users, usersError] = await handle(User.find(obj).limit(limit).skip(offset).sort({[sortField]: sortType}).lean().exec());
 
@@ -64,13 +71,14 @@ async function createUser(req, res) {
         * nickname
     */
 
-    let {email, name, lastName, nickname} = req.body;
+    let {email, name, lastName, nickname, publicKey} = req.body;
 
     let params = [
         new ValidationField('email', email, 'email', false, 'email'),
         new ValidationField('name', name, 'string', false, 'name'),
         new ValidationField('lastName', lastName, 'string', false, 'lastName'),
-        new ValidationField('nickname', nickname, 'nickname', false, 'nickname')
+        new ValidationField('nickname', nickname, 'nickname', false, 'nickname'),
+        new ValidationField('publicKey', publicKey, 'string', false, null, 'publicKey')
     ];
 
     let {errors, obj} = FieldsValidator(params);
@@ -156,6 +164,13 @@ async function getUserInfo(req, res) {
         return res.status(404).end();
     }
 
+    let userRights = new UserRights(req.user.id, null, user);
+    await userRights.initializeUser();
+
+    let rights = await userRights.checkRights('read');
+
+    if (rights.can) return res.status(rights.status).send(rights.message);
+
     return res.status(200).send(userObj(user));
 }
 
@@ -198,7 +213,12 @@ async function updateUser(req, res) {
         return res.status(404).end();
     }
 
-    if (!GetRights(req.user, findUser)) return res.status(403).end();
+    let userRights = new UserRights(req.user.id, null, findUser);
+    await userRights.initializeUser();
+
+    let rights = await userRights.checkRights('change');
+
+    if (rights.can) return res.status(rights.status).send(rights.message);
 
     let [updatedUser, updatedUserError] = await handle(User.updateOne({_id: req.params.id}, obj).lean().exec());
 
@@ -232,7 +252,12 @@ async function deleteUser(req, res) {
         return res.status(404).end();
     }
 
-    if (!GetRights(req.user, findUser)) return res.status(403).end();
+    let userRights = new UserRights(req.user.id, null, findUser);
+    await userRights.initializeUser();
+
+    let rights = await userRights.checkRights('delete');
+
+    if (rights.can) return res.status(rights.status).send(rights.message);
 
     // TODO delete user traces
 
@@ -259,8 +284,6 @@ async function blockUnblockUser(req, res) {
         })
     }
 
-    if (!IsAdmin(req.user)) return res.status(403).end();
-
     let [findUser, findUserError] = await handle(User.findOne({_id: req.params.id}).lean().exec());
 
     if (findUserError) {
@@ -270,6 +293,13 @@ async function blockUnblockUser(req, res) {
     }
 
     if (!findUser) return res.status(404).end();
+
+    let userRights = new UserRights(req.user.id, null, findUser);
+    await userRights.initializeUser();
+
+    let rights = await userRights.checkRights('block');
+
+    if (rights.can) return res.status(rights.status).send(rights.message);
 
     let [updateUser, updateUserError] = await handle(User.findByIdAndUpdate(req.params.id, {status: req.query.status}));
 
@@ -305,6 +335,13 @@ async function loadImage(req, res) {
     if (!user) {
         return res.status(404).end();
     }
+
+    let userRights = new UserRights(req.user.id, null, user);
+    await userRights.initializeUser();
+
+    let rights = await userRights.checkRights('change');
+
+    if (rights.can) return res.status(rights.status).send(rights.message);
 
     let file = req.files.avatar,
         extension = path.extname(file.name),
@@ -347,7 +384,12 @@ async function deleteImage(req, res) {
 
     if (!findUser) return res.status(404).end();
 
-    if (!GetRights(req.user, findUser)) return res.status(403).end();
+    let userRights = new UserRights(req.user.id, null, findUser);
+    await userRights.initializeUser();
+
+    let rights = await userRights.checkRights('change');
+
+    if (rights.can) return res.status(rights.status).send(rights.message);
 
     let [deleteFile, deleteFileError] = await handle(fsx.remove('./' + findUser.avatar));
 
@@ -394,7 +436,12 @@ async function changeEmail(req, res) {
 
     if (!findUser) return res.status(404).end();
 
-    if (!GetRights(req.user, findUser)) return res.status(403).end();
+    let userRights = new UserRights(req.user.id, null, findUser);
+    await userRights.initializeUser();
+
+    let rights = await userRights.checkRights('change');
+
+    if (rights.can) return res.status(rights.status).send(rights.message);
 
     let [findUserWithSameEmail, findUserWithSameEmailError] = await handle(User.findOne({email: req.body.email}).lean().exec());
 
@@ -443,7 +490,12 @@ async function changeNickname(req, res) {
 
     if (!findUser) return res.status(404).end();
 
-    if (!GetRights(req.user, findUser)) return res.status(403).end();
+    let userRights = new UserRights(req.user.id, null, findUser);
+    await userRights.initializeUser();
+
+    let rights = await userRights.checkRights('change');
+
+    if (rights.can) return res.status(rights.status).send(rights.message);
 
     let [findUserWithSameNickname, findUserWithSameNicknameError] = await handle(User.findOne({nickname: req.body.nickname}).lean().exec());
 

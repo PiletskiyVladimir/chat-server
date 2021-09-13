@@ -16,7 +16,8 @@ const User = new Schema({
     status: {type: String, enum: ['blocked', 'normal', 'frozen']},
     frozenUntil: {type: Date, default: null},
     profileDescription: String,
-    hidden: {type: Boolean}
+    hidden: {type: Boolean},
+    publicKey: {type: String}
 }, {
     timestamps: true,
     collection: 'User'

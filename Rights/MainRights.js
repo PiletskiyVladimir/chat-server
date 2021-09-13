@@ -37,7 +37,7 @@ class Rights {
     async whatCanRead(ids) {
         let result = [];
         if (this.user.role === 'user') {
-            let [unhiddenUsers, unhiddenUsersError] = await handle(User.find({hidden: false, $}).lean().exec());
+            let [unhiddenUsers, unhiddenUsersError] = await handle(User.find({hidden: false}).lean().exec());
 
             if (unhiddenUsersError) return {message: unhiddenUsersError, status: 500, can: false}
 
@@ -99,8 +99,8 @@ class Rights {
                     message: null
                 }
             }
-            case 'ban':
-            case 'unban': {
+            case 'block':
+            case 'unblock': {
                 let can = this.user.role === 'admin';
 
                 return {
