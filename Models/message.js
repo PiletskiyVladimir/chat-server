@@ -7,6 +7,7 @@ const Message = new Schema({
     files: [{type: String, required: false}],
     readBy: [{type: mongoose.Schema.ObjectId, ref: 'User'}],
     text: String,
+    forUser: {type: mongoose.Schema.ObjectId, ref: 'User'},
     room: {type: mongoose.Schema.ObjectId, ref: 'Room', required: true}
 }, {
     timestamps: true,

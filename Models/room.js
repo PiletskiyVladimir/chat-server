@@ -1,8 +1,13 @@
 const mongoose = require('mongoose'),
     Schema = mongoose.Schema;
 
+const userSchema = new Schema({
+    id: {type: String},
+    publicKey: {type: String}
+})
+
 const Room = new Schema({
-    users: [{type: String}],
+    users: [userSchema],
     lastMessage: {type: Object}
 }, {
     timestamps: true,

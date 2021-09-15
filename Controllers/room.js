@@ -50,13 +50,26 @@ async function getRoomsList(req, res) {
 }
 
 async function createRoom(req, res) {
-    let params = [
-        new ValidationField('users', req.body.users, 'arrayString', false, 'users')
-    ];
+    let params = [];
+
+    if (req.body.users) {
+        for (let user of req.body.users) {
+            params.push(
+                new ValidationField('id', user.id, 'string', false),
+                new ValidationField('publicKey', user.publicKey, 'string', false)
+            )
+        }
+    } else {
+        return res.status(400).send({
+            errors: ["FIELD USERS IS REQUIRED"]
+        })
+    }
 
     let { errors, obj } = FieldsValidator(params);
 
     if (errors.length > 0) return res.status(400).send(errors);
+
+    obj['users'] = req.body.users;
 
     let [createdRoom, createdRoomError] = await handle(Room.create(obj));
 
@@ -125,13 +138,27 @@ async function deleteRoom(req, res) {
 
 async function updateUsersList(req, res) {
     let params = [
-        new ValidationField('users', req.body.users, 'arrayString', false, 'users'),
         new ValidationField('id', req.params.id, 'string', false)
     ];
+
+    if (req.body.users) {
+        for (let user of req.body.users) {
+            params.push(
+                new ValidationField('id', user.id, 'string', false),
+                new ValidationField('publicKey', user.publicKey, 'string', false)
+            )
+        }
+    } else {
+        return res.status(400).send({
+            errors: ["FIELD USERS IS REQUIRED"]
+        })
+    }
 
     let {errors, obj} = FieldsValidator(params);
 
     if (errors.length > 0) return res.status(400).send(errors);
+
+    obj['users'] = req.body.users;
 
     let [room, roomError] = await handle(Room.findById(req.params.id));
 
