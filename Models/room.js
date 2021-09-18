@@ -1,9 +1,12 @@
 const mongoose = require('mongoose'),
     Schema = mongoose.Schema;
+const fa = require("moment/locale/fa");
 
 const userSchema = new Schema({
     id: {type: String},
     publicKey: {type: String}
+}, {
+    _id: false
 })
 
 const Room = new Schema({

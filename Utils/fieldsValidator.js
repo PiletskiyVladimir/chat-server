@@ -149,7 +149,7 @@ function fieldsValidator (params) {
 
         if (isError) {
             errors.push(new Error(CODE_TYPE_ERROR, param.name, `FIELD ${param.name} IS INVALID`))
-        } else if (param.value != null && param.value !== '' && param.type !== 'searchString' && param.type !== 'searchNumber' && param.type !== 'searchDate' && param.type !== 'searchBool') {
+        } else if (param.value != null && param.value !== '' && param.type !== 'searchString' && param.type !== 'searchNumber' && param.type !== 'searchDate' && param.type !== 'searchBool' && param.dbName != null) {
             obj[param.dbName] = param.value;
         }
     }

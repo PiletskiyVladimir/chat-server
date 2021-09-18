@@ -18,7 +18,8 @@ function userObj (data) {
         profileDescription: data.profileDescription,
         frozenUntil: data.frozenUntil,
         createdAt: moment(data.createdAt).format("YYYY-MM-DD hh:mm:ss"),
-        updatedAt: moment(data.updatedAt).format("YYYY-MM-DD hh:mm:ss")
+        updatedAt: moment(data.updatedAt).format("YYYY-MM-DD hh:mm:ss"),
+        publicKey: data.publicKey
     }
 }
 

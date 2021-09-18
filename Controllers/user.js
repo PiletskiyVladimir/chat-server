@@ -78,7 +78,7 @@ async function createUser(req, res) {
         new ValidationField('name', name, 'string', false, 'name'),
         new ValidationField('lastName', lastName, 'string', false, 'lastName'),
         new ValidationField('nickname', nickname, 'nickname', false, 'nickname'),
-        new ValidationField('publicKey', publicKey, 'string', false, null, 'publicKey')
+        new ValidationField('publicKey', publicKey, 'string', false, 'publicKey')
     ];
 
     let {errors, obj} = FieldsValidator(params);

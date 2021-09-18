@@ -4,9 +4,9 @@ const
 
 const Message = new Schema({
     sender: {type: mongoose.Schema.ObjectId, ref: 'User'},
-    files: [{type: String, required: false}],
+    files: [[String]],
     readBy: [{type: mongoose.Schema.ObjectId, ref: 'User'}],
-    text: String,
+    text: [String],
     forUser: {type: mongoose.Schema.ObjectId, ref: 'User'},
     room: {type: mongoose.Schema.ObjectId, ref: 'Room', required: true}
 }, {

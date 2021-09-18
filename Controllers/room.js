@@ -31,7 +31,7 @@ async function getRoomsList(req, res) {
 
     let { errors, obj } = FieldsValidator(params);
 
-    if (errors.length > 0) return res.status(500).send(errors);
+    if (errors.length > 0) return res.status(400).send(errors);
 
     let [foundRooms, foundRoomsError] = await handle(Room.find(obj).lean().exec());
 
@@ -75,25 +75,7 @@ async function createRoom(req, res) {
 
     if (createdRoomError) return res.status(500).send(createdRoomError);
 
-    let [createdMessage, createdMessageError] = await handle(Message.create({
-        sender: null,
-        files: [],
-        readBy: [req.user.id],
-        text: "Start of conversation",
-        room: createdRoom._id
-    }));
-
-    if (createdMessageError) return res.status(500).send(createdMessageError);
-
-    let [updateRoom, updateRoomError] = await handle(Room.updateOne({ _id: createdRoom._id }, { lastMessage: createdMessage }).lean().exec());
-
-    if (updateRoomError) return res.status(500).send(updateRoomError);
-
-    let [foundedRoom, foundedRoomError] = await handle(Room.findById(createdRoom._id).lean().exec());
-
-    if (foundedRoomError) return res.status(500).send(foundedRoomError)
-
-    return res.status(200).send(roomObj(foundedRoom));
+    return res.status(200).send(roomObj(createdRoom));
 }
 
 async function roomDetail(req, res) {

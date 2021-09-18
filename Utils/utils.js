@@ -9,7 +9,7 @@ const handle = (promise) => {
 }
 
 function generateToken(userId, email, userRole) {
-    return jwt.sign({id: userId, email: email, userRole: userRole}, config["jwt-token"]);
+    return jwt.sign({id: userId.toString(), email: email, userRole: userRole}, config["jwt-token"]);
 }
 
 function generateCode() {
