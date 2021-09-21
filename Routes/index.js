@@ -9,8 +9,9 @@ router.use(jwt.unless({
     ]
 }));
 
-router.use('/user', require('./user'));
-router.use('/auth', require('./auth'));
-router.use('/room', require('./room'));
+router.use('/user',             require('./user'));
+router.use('/auth',             require('./auth'));
+router.use('/room',             require('./room'));
+router.use('/message',          require('./message'));
 
 module.exports = router;

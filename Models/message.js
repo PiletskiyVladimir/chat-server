@@ -4,11 +4,9 @@ const
 
 const Message = new Schema({
     sender: {type: mongoose.Schema.ObjectId, ref: 'User'},
-    files: [[String]],
     readBy: [{type: mongoose.Schema.ObjectId, ref: 'User'}],
-    text: [String],
-    forUser: {type: mongoose.Schema.ObjectId, ref: 'User'},
-    room: {type: mongoose.Schema.ObjectId, ref: 'Room', required: true}
+    room: {type: mongoose.Schema.ObjectId, ref: 'Room', required: true},
+    messageObj: Schema.Types.Mixed
 }, {
     timestamps: true,
     collection: 'Message'

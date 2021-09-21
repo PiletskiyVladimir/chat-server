@@ -4,6 +4,7 @@ const Message = mongoose.model('Message');
 const ValidationField = require("../Models/validationField");
 const FieldsValidator = require('../Utils/fieldsValidator');
 const {messageObj} = require('../Utils/modelObjects');
+const Room = mongoose.model('Room');
 
 async function getMessagesList(req, res) {
     let params = [
@@ -28,10 +29,30 @@ async function createMessage(req, res) {
     let user = req.user.id;
 
     let params = [
-
+        new ValidationField('room', req.body.room, 'string', false, 'room'),
+        new ValidationField('messageObj', req.body.messageObj, 'messageObj', false, 'messageObj')
     ];
 
-    // TODO do it later
+    let {errors, obj} = FieldsValidator(params);
+
+    if (errors.length > 0) return res.status(400).send(errors);
+
+    obj['sender'] = user;
+    obj['readBy'] = [user];
+
+    let [createdMessage, createdMessageError] = await handle(Message.create(obj));
+
+    if (createdMessageError) return res.status(500).send(createdMessageError);
+
+    let [updatedRoom, updatedRoomError] = await handle(Room.updateOne({_id: req.body.room}, {
+        lastMessage: createdMessage
+    }));
+
+    if (updatedRoomError) return res.status(500).send(updatedRoomError);
+
+    // TODO add socket notification
+
+    return res.status(200).send(messageObj(createdMessage, user));
 }
 
 async function changeMessage(req, res) {
@@ -60,6 +81,24 @@ async function deleteMessage(req, res) {
     return res.status(200).end();
 }
 
+async function messageDetail(req, res) {
+    let params = [
+        new ValidationField('id', req.params.id, 'string', false)
+    ];
+
+    let {errors, obj} = FieldsValidator(params);
+
+    if (errors.length > 0) return res.status(400).send(errors);
+
+    let [message, messageError] = await handle(Message.findById(req.params.id));
+
+    if (messageError) return res.status(500).send(messageError);
+
+    if (!message) return res.status(404).end();
+
+    return res.status(200).send(messageObj(message, req.user.id));
+}
+
 module.exports = {
-    getMessagesList, createMessage, changeMessage, deleteMessage
+    getMessagesList, createMessage, changeMessage, deleteMessage, messageDetail
 }
