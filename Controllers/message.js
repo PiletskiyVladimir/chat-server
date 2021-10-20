@@ -7,6 +7,8 @@ const {messageObj} = require('../Utils/modelObjects');
 const Room = mongoose.model('Room');
 
 async function getMessagesList(req, res) {
+    let user = req.user.id;
+
     let params = [
         new ValidationField('id', req.query.id, 'searchString', true, '_id'),
         new ValidationField('sender', req.query.sender, 'searchString', true, 'sender'),
@@ -22,7 +24,33 @@ async function getMessagesList(req, res) {
 
     if (messagesError) return res.status(500).send(messagesError);
 
-    return res.status(200).send(messages);
+    let formattedMessages = messages.map(el => {
+        return messageObj(el, user)
+    })
+
+    return res.status(200).send(formattedMessages);
+}
+
+async function getMessagesFromRoom(req, res) {
+    let user = req.user.id;
+
+    let params = [
+        new ValidationField('room', req.params.id, 'string', false, 'room')
+    ];
+
+    let {errors, obj} = FieldsValidator(params);
+
+    if (errors.length > 0) return res.status(400).send(errors);
+
+    let [messages, messagesError] = await handle(Message.find(obj).lean().exec());
+
+    if (messagesError) return res.status(500).send(messagesError);
+
+    let formattedMessages = messages.map(el => {
+        return messageObj(el, user)
+    })
+
+    return res.status(200).send(formattedMessages);
 }
 
 async function createMessage(req, res) {
@@ -100,5 +128,5 @@ async function messageDetail(req, res) {
 }
 
 module.exports = {
-    getMessagesList, createMessage, changeMessage, deleteMessage, messageDetail
+    getMessagesList, createMessage, changeMessage, deleteMessage, messageDetail, getMessagesFromRoom
 }

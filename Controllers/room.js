@@ -1,35 +1,33 @@
 const
-    { searchParams } = require('../Utils/utils'),
-    mongoose = require('../Config/database'),
-    sendMail = require('../Config/nodemailer'),
-    config = require('../Config/config.json'),
+    {searchParams}          = require('../Utils/utils'),
+    mongoose                = require('../Config/database'),
+    sendMail                = require('../Config/nodemailer'),
+    config                  = require('../Config/config.json'),
 
-    User = mongoose.model('User'),
-    Room = mongoose.model('Room'),
-    Message = mongoose.model('Message'),
+    User                    = mongoose.model('User'),
+    Room                    = mongoose.model('Room'),
+    Message                 = mongoose.model('Message'),
 
-    moment = require('moment'),
-    fsx = require('fs-extra'),
-    path = require('path'),
-    md5 = require('md5'),
+    moment                  = require('moment'),
+    fsx                     = require('fs-extra'),
+    path                    = require('path'),
+    md5                     = require('md5'),
 
-    ValidationField = require('../Models/validationField'),
+    ValidationField         = require('../Models/validationField'),
 
-    FieldsValidator = require('../Utils/fieldsValidator'),
-    { roomObj } = require('../Utils/modelObjects'),
-    { handle, generateCode } = require('../Utils/utils'),
-    { generateRoomKey } = require('../Utils/room');
+    FieldsValidator         = require('../Utils/fieldsValidator'),
+    {roomObj}               = require('../Utils/modelObjects'),
+    {handle, generateCode}  = require('../Utils/utils'),
+    {generateRoomKey}       = require('../Utils/room');
 
 async function getRoomsList(req, res) {
-    let { limit, offset, sortField, sortType } = searchParams(req);
+    let {limit, offset, sortField, sortType} = searchParams(req);
 
-    //
+    let params = [];
 
-    let params = [
-        new ValidationField('users', req.query.users, 'searchString', true, 'users')
-    ];
+    let {errors, obj} = FieldsValidator(params);
 
-    let { errors, obj } = FieldsValidator(params);
+    obj['users.id'] = req.user.id;
 
     if (errors.length > 0) return res.status(400).send(errors);
 
@@ -41,7 +39,11 @@ async function getRoomsList(req, res) {
 
     if (totalCountError) return res.status(500).send(totalCountError);
 
-    let result = foundRooms.map(el => roomObj(el));
+    let result = [];
+
+    for await (let el of foundRooms) {
+        result.push(await roomObj(el, req.user.id));
+    }
 
     return res.status(200).send({
         data: result,
@@ -65,7 +67,7 @@ async function createRoom(req, res) {
         })
     }
 
-    let { errors, obj } = FieldsValidator(params);
+    let {errors, obj} = FieldsValidator(params);
 
     if (errors.length > 0) return res.status(400).send(errors);
 
@@ -75,7 +77,7 @@ async function createRoom(req, res) {
 
     if (createdRoomError) return res.status(500).send(createdRoomError);
 
-    return res.status(200).send(roomObj(createdRoom));
+    return res.status(200).send(roomObj(createdRoom, req.user.id));
 }
 
 async function roomDetail(req, res) {
@@ -83,7 +85,7 @@ async function roomDetail(req, res) {
         new ValidationField('id', req.params.id, 'string', false)
     ];
 
-    let { errors, obj } = FieldsValidator(params);
+    let {errors, obj} = FieldsValidator(params);
 
     if (errors.length > 0) return res.status(500).send(errors);
 
@@ -93,7 +95,7 @@ async function roomDetail(req, res) {
 
     if (!room) return res.status(404).end();
 
-    return res.status(200).send(roomObj(room));
+    return res.status(200).send(await roomObj(room, req.user.id));
 }
 
 async function deleteRoom(req, res) {

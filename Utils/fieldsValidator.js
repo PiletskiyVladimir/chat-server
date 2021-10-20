@@ -156,36 +156,40 @@ function fieldsValidator (params) {
 
                     if (!message && !files) isError = true;
 
-                    if (!(message instanceof Array)) {
-                        isError = true;
-                        break;
-                    }
-
-                    if (!(files instanceof Array)) {
-                        isError = true;
-                        break;
-                    }
-
-                    for (let el of message) {
-                        if (typeof el !== 'string') {
+                    if (message) {
+                        if (!(message instanceof Array)) {
                             isError = true;
                             break;
                         }
-                    }
 
-                    if (!isError) {
-                        for (let el of files) {
-                            let {fileName, value} = el;
-                            if (typeof fileName !== 'string') isError = true;
-
-                            if (!(value instanceof Array)) {
+                        for (let el of message) {
+                            if (typeof el !== 'string') {
                                 isError = true;
                                 break;
                             }
+                        }
+                    }
 
-                            if (!isError) {
-                                for (let part of value) {
-                                    if (typeof part !== 'string') isError = true;
+                    if (files) {
+                        if (!(files instanceof Array)) {
+                            isError = true;
+                            break;
+                        }
+
+                        if (!isError) {
+                            for (let el of files) {
+                                let {fileName, value} = el;
+                                if (typeof fileName !== 'string') isError = true;
+
+                                if (!(value instanceof Array)) {
+                                    isError = true;
+                                    break;
+                                }
+
+                                if (!isError) {
+                                    for (let part of value) {
+                                        if (typeof part !== 'string') isError = true;
+                                    }
                                 }
                             }
                         }

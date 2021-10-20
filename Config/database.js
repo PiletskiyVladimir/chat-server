@@ -2,8 +2,6 @@ const
     mongoose = require('mongoose'),
     config = require('./config.json');
 
-require('mongoose-moment')(mongoose);
-
 mongoose.model('Room',      require('../Models/room'));
 mongoose.model('User',      require('../Models/user'));
 mongoose.model('Message',   require('../Models/message'));
