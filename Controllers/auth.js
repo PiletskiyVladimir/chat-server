@@ -117,7 +117,7 @@ async function auth(req, res) {
         })
     }
 
-    res.status(200).json({key: findUser.email, token: generateToken(findUser._id, findUser.email, findUser.role)});
+    res.status(200).json({id: userAuthUpdate._id, key: findUser.email, token: generateToken(findUser._id, findUser.email, findUser.role)});
 }
 
 module.exports = {
