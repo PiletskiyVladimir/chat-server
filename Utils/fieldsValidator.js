@@ -94,11 +94,13 @@ function fieldsValidator (params) {
                 if (param.value !== null) {
                     if (typeof param.value !== "string") isError = true;
 
-                    let splattedArray = param.value.split(',');
+                    // let splattedArray = param.value.split(',');
+                    //
+                    // if (splattedArray.length === 0) break;
+                    //
+                    // obj[param.dbName] = {$in: splattedArray.map(el => new RegExp(el))};
 
-                    if (splattedArray.length === 0) break;
-
-                    obj[param.dbName] = {$in: splattedArray.map(el => new RegExp(el))};
+                    obj[param.dbName] = {$regex: new RegExp(param.value), $options: "i"}
                 }
 
                 break;

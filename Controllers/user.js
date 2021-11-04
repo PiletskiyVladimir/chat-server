@@ -37,9 +37,9 @@ async function getUsersList(req, res) {
     let userRights = new UserRights(req.user.id, null, null);
     await userRights.initializeUser();
 
-    let ids = obj['_id'];
-
-    obj['_id'] = await userRights.whatCanRead(ids);
+    // let ids = obj['_id'];
+    //
+    // obj['_id'] = await userRights.whatCanRead(ids);
 
     let [users, usersError] = await handle(User.find(obj).limit(limit).skip(offset).sort({[sortField]: sortType}).lean().exec());
 
@@ -69,6 +69,7 @@ async function createUser(req, res) {
         * name
         * lastName
         * nickname
+        * publicKey
     */
 
     let {email, name, lastName, nickname, publicKey} = req.body;
@@ -119,6 +120,8 @@ async function createUser(req, res) {
 
     obj.code = generateCode();
     obj.codeExpiresIn = moment(moment().valueOf() + 600000).format('YYYY-MM-DD HH:mm:ss');
+    obj.onlineStatus = 'offline';
+    obj.hidden = false;
 
     let [createdUser, createdUserError] = await handle(User.create(obj));
 
@@ -152,7 +155,7 @@ async function getUserInfo(req, res) {
         })
     }
 
-    let [user, userError] = await handle(User.findById(req.params.id));
+    let [user, userError] = await handle(User.findById(req.params.id).lean().exec());
 
     if (userError) {
         return res.status(403).send({
@@ -169,7 +172,7 @@ async function getUserInfo(req, res) {
 
     let rights = await userRights.checkRights('read');
 
-    if (rights.can) return res.status(rights.status).send(rights.message);
+    if (!rights.can) return res.status(rights.status).send(rights.message);
 
     return res.status(200).send(userObj(user));
 }
@@ -315,7 +318,7 @@ async function blockUnblockUser(req, res) {
 async function loadImage(req, res) {
     let params = [
         new ValidationField('id', req.params.id, 'string', false),
-        new ValidationField('file', req.files ? req.files.avatar : null, 'file', false)
+        new ValidationField('file', req.files?.avatar, 'file', false)
     ];
 
     let {errors, obj} = FieldsValidator(params);
@@ -350,17 +353,19 @@ async function loadImage(req, res) {
 
     await file.mv('./' + avatar);
 
-    let [updatedUser, updatedUserError] = await handle(User.findByIdAndUpdate(req.params.id, {
-        avatar: avatar
-    }));
+    let [update, updateError] = await handle(User.updateOne({_id: req.params.id}, {avatar}));
+
+    if (updateError) return res.status(500).send(updateError);
+
+    let [updatedUser, updatedUserError] = await handle(User.findById(req.params.id).lean().exec());
 
     if (updatedUserError) {
-        return res.status(403).send({
+        return res.status(500).send({
             error: updatedUserError
         })
     }
 
-    res.status(200).end();
+    res.status(200).send(userObj(updatedUser));
 }
 
 async function deleteImage(req, res) {

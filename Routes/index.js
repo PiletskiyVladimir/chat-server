@@ -4,6 +4,7 @@ const
 
 router.use(jwt.unless({
     path: [
+        /\/uploads/,
         /\/auth/,
         {url: /\/user/, methods: ['POST']}
     ]

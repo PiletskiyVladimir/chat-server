@@ -13,7 +13,7 @@ const
     {userObj} = require('../Utils/modelObjects'),
     {handle, generateCode, generateToken} = require('../Utils/utils');
 
-async function sendCode (req, res) {
+async function sendCode(req, res) {
     /* fields
         * email
     */
@@ -117,7 +117,11 @@ async function auth(req, res) {
         })
     }
 
-    res.status(200).json({id: userAuthUpdate._id, key: findUser.email, token: generateToken(findUser._id, findUser.email, findUser.role)});
+    res.status(200).json({
+        id: userAuthUpdate._id,
+        key: findUser.email,
+        token: generateToken(findUser._id, findUser.email, findUser.role)
+    });
 }
 
 module.exports = {

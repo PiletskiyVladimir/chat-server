@@ -24,6 +24,13 @@ require('./Socket/socket')(io);
 
 app.io = io;
 
+app.use(fileUpload({
+    createParentPath: true,
+    parseNested: true
+}));
+
+app.use('/uploads', express.static('./uploads'));
+
 app.use(bodyParser.urlencoded({extended: false, limit: '100mb'}));
 app.use(bodyParser.json({limit: '100mb'}));
 app.use(bodyParser.text());
