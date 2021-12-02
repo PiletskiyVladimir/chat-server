@@ -7,7 +7,6 @@ router.get('/:id', getUserInfo);
 router.post('', createUser);
 router.patch('/:id', updateUser);
 router.delete('/:id', deleteUser);
-
 router.patch('/:id/block-unblock', blockUnblockUser);
 
 router.patch('/:id/email', changeEmail);

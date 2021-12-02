@@ -10,12 +10,22 @@ module.exports = io => {
 
     io.on('connection', async socket => {
 
+        socket.join(socket.user.id);
 
+        console.log(socket.user.id + " connected");
+
+        socket.on('joinRoom', (data) => {
+            console.log('user joined');
+            socket.join(data);
+        })
+
+        socket.on('leaveRoom', (data) => {
+            console.log('user left');
+            socket.leave(data);
+        })
 
         socket.on('disconnect', async () => {
-            for (let room of rooms) {
-                socket.leave(room);
-            }
+            socket.leave(socket.user.id);
             await User.findByIdAndUpdate(socket.user.id, {onlineStatus: 'offline'});
         })
     });

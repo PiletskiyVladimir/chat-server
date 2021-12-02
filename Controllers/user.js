@@ -19,7 +19,6 @@ const
     {handle, generateCode, searchParams} = require('../Utils/utils');
 
 async function getUsersList(req, res) {
-    // TODO search params., limits, offset
 
     let {limit, offset, sortField, sortType} = searchParams(req);
 
@@ -33,6 +32,8 @@ async function getUsersList(req, res) {
     let {errors, obj} = FieldsValidator(params);
 
     if (errors.length > 0) return res.status(400).send(errors);
+
+    obj._id = {$ne: req.user.id};
 
     let userRights = new UserRights(req.user.id, null, null);
     await userRights.initializeUser();
@@ -395,6 +396,8 @@ async function deleteImage(req, res) {
     let rights = await userRights.checkRights('change');
 
     if (rights.can) return res.status(rights.status).send(rights.message);
+
+    if (!findUser.avatar) return res.status(200).end();
 
     let [deleteFile, deleteFileError] = await handle(fsx.remove('./' + findUser.avatar));
 

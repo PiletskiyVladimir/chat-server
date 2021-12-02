@@ -1,24 +1,24 @@
 const
-    {searchParams}          = require('../Utils/utils'),
-    mongoose                = require('../Config/database'),
-    sendMail                = require('../Config/nodemailer'),
-    config                  = require('../Config/config.json'),
+    {searchParams} = require('../Utils/utils'),
+    mongoose = require('../Config/database'),
+    sendMail = require('../Config/nodemailer'),
+    config = require('../Config/config.json'),
 
-    User                    = mongoose.model('User'),
-    Room                    = mongoose.model('Room'),
-    Message                 = mongoose.model('Message'),
+    User = mongoose.model('User'),
+    Room = mongoose.model('Room'),
+    Message = mongoose.model('Message'),
 
-    moment                  = require('moment'),
-    fsx                     = require('fs-extra'),
-    path                    = require('path'),
-    md5                     = require('md5'),
+    moment = require('moment'),
+    fsx = require('fs-extra'),
+    path = require('path'),
+    md5 = require('md5'),
 
-    ValidationField         = require('../Models/validationField'),
+    ValidationField = require('../Models/validationField'),
 
-    FieldsValidator         = require('../Utils/fieldsValidator'),
-    {roomObj}               = require('../Utils/modelObjects'),
-    {handle, generateCode}  = require('../Utils/utils'),
-    {generateRoomKey}       = require('../Utils/room');
+    FieldsValidator = require('../Utils/fieldsValidator'),
+    {roomObj} = require('../Utils/modelObjects'),
+    {handle, generateCode} = require('../Utils/utils'),
+    {generateRoomKey} = require('../Utils/room');
 
 async function getRoomsList(req, res) {
     let {limit, offset, sortField, sortType} = searchParams(req);
@@ -31,7 +31,7 @@ async function getRoomsList(req, res) {
 
     if (errors.length > 0) return res.status(400).send(errors);
 
-    let [foundRooms, foundRoomsError] = await handle(Room.find(obj).lean().exec());
+    let [foundRooms, foundRoomsError] = await handle(Room.find(obj).sort([['lastMessage.createdAt', -1]]).lean().exec());
 
     if (foundRoomsError) return res.status(500).send(foundRoomsError);
 
@@ -157,10 +157,71 @@ async function updateUsersList(req, res) {
     return res.status(200).end();
 }
 
+async function getRoomWithUser(req, res) {
+    let user = req.user.id;
+
+    let params = [
+        new ValidationField('userId', req.params.id, 'string', false)
+    ];
+
+    let {obj, errors} = FieldsValidator(params);
+
+    if (errors.length > 0) return res.status(400).send(errors);
+
+    // find info about both users
+
+    let [users, usersError] = await handle(User.find({$or: [{_id: user}, {_id: req.params.id}]}).lean().exec());
+
+    if (usersError) return res.status(500).send(usersError);
+
+    let
+        searchArr = [{
+            id: users[0]._id + "",
+            publicKey: users[0].publicKey
+        }, {
+            id: users[1]._id + "",
+            publicKey: users[1].publicKey
+        }],
+        reversedSearchArr = [{
+            id: users[1]._id + "",
+            publicKey: users[1].publicKey
+        }, {
+            id: users[0]._id + "",
+            publicKey: users[0].publicKey
+        }];
+
+    if (users.length !== 2) return res.status(500).end();
+
+    let [room, roomError] = await handle(Room.findOne({
+        $or: [
+            {
+                users: searchArr
+            }, {
+                users: reversedSearchArr
+            }
+        ]
+    }).lean().exec());
+
+    if (roomError) return res.status(500).send(roomError);
+
+    if (!room) {
+        let [createdRoom, createdRoomError] = await handle(Room.create({users: searchArr}));
+
+        if (createdRoomError) return res.status(500).send(createdRoomError);
+
+        room = createdRoom;
+
+        req.app.io.to(req.params.id).emit('new-room', await roomObj(room, req.params.id));
+    }
+
+    return res.status(200).send(await roomObj(room, user));
+}
+
 module.exports = {
     getRoomsList,
     createRoom,
     roomDetail,
     deleteRoom,
-    updateUsersList
+    updateUsersList,
+    getRoomWithUser
 }

@@ -12,7 +12,7 @@ function normalizeTimeOutput (value) {
 } 
 
 function timeOutput(time) {
-    return normalizeTimeOutput(time.getHours()) + ":" + normalizeTimeOutput(time.getMinutes()) + ":" + normalizeTimeOutput(time.getSeconds());
+    return normalizeTimeOutput(time.getHours()) + ":" + normalizeTimeOutput(time.getMinutes());
 }
 
 function dateOutput(date) {
@@ -46,7 +46,7 @@ function userObj (data) {
 async function roomObj (data, user) {
     let resultObj = {
         id: data._id,
-        lastMessage: messageObj(data.lastMessage, user),
+        lastMessage: data.lastMessage ? messageObj(data.lastMessage, user) : null,
         users: data.users,
         createdAt: moment(data.createdAt).format("YYYY-MM-DD hh:mm:ss"),
         updatedAt: moment(data.updatedAt).format("YYYY-MM-DD hh:mm:ss")
@@ -66,8 +66,6 @@ function messageObj (message, user) {
         sender: message.sender,
         room: message.room,
         messageObj: message.messageObj[user],
-        // createdAt: moment(message.createdAt).format("YYYY-MM-DD hh:mm:ss"),
-        // updatedAt: moment(message.updatedAt).format("YYYY-MM-DD hh:mm:ss")
         createdAt: timeOutput(createdAtTime)
     };
 }

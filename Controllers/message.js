@@ -55,6 +55,7 @@ async function getMessagesFromRoom(req, res) {
 
 async function createMessage(req, res) {
     let user = req.user.id;
+    let io = req.app.io;
 
     let params = [
         new ValidationField('room', req.body.room, 'string', false, 'room'),
@@ -64,6 +65,12 @@ async function createMessage(req, res) {
     let {errors, obj} = FieldsValidator(params);
 
     if (errors.length > 0) return res.status(400).send(errors);
+
+    let [room, roomError] = await handle(Room.findById(req.body.room).lean().exec());
+
+    if (roomError) return res.status(500).send(roomError);
+
+    if (!room) return res.status(404).end();
 
     obj['sender'] = user;
     obj['readBy'] = [user];
@@ -78,7 +85,10 @@ async function createMessage(req, res) {
 
     if (updatedRoomError) return res.status(500).send(updatedRoomError);
 
-    // TODO add socket notification
+    for (let el of room.users) {
+        io.to(el.id).emit('new-message', JSON.stringify(messageObj(createdMessage, el.id)));
+        io.to(`${room._id}${el.id}`).emit('new-room-message', JSON.stringify(messageObj(createdMessage, el.id)));
+    }
 
     return res.status(200).send(messageObj(createdMessage, user));
 }
