@@ -1,0 +1,32 @@
+{
+  "name": "typescript-chat-server",
+  "version": "0.0.0",
+  "description": "Back-end for chat server written on typescript",
+  "main": "index.ts",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.2",
+    "socket.io": "^4.4.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PiletskiyVladimir/chat-server.git"
+  },
+  "keywords": [
+    "ts",
+    "chat",
+    "socket",
+    "socket.io",
+    "express"
+  ],
+  "author": "Volodymyr V-Man Piletskiy",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PiletskiyVladimir/chat-server/issues"
+  },
+  "homepage": "https://github.com/PiletskiyVladimir/chat-server#readme"
+}
